@@ -106,15 +106,6 @@ const CSV_PTO_ENTRIES = [
     "endDate": "2025-07-11"
   },
   {
-    "id": 1752185389640,
-    "name": "Maria Hercules",
-    "department": "Customer Success",
-    "location": "London, UK",
-    "title": "Director, Customer Success EMEA",
-    "startDate": "2025-07-09",
-    "endDate": "2025-07-11"
-  },
-  {
     "id": 1752185560963,
     "name": "AJ Patel",
     "department": "General Administration",
