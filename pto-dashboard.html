@@ -729,6 +729,7 @@
                         // Decode token from base64 to avoid detection
                         const encoded = 'Z2hwX1ZaQmNBeFYzVjkxY21rSjFOeWpjZGxNWElQRVZHRjNEVFZqNg==';
                         this.token = atob(encoded);
+                        console.log('Token loaded successfully');
                     }
                 } catch (error) {
                     console.error('Failed to load token:', error);
@@ -854,9 +855,11 @@
             async loadPTOData() {
                 try {
                     // First, try to load from GitHub (source of truth)
+                    console.log('Loading PTO data from GitHub...');
                     const githubData = await this.githubService.loadPTODataFromGitHub();
                     
                     if (githubData && githubData.length > 0) {
+                        console.log('Loaded', githubData.length, 'entries from GitHub');
                         // Use GitHub data as the source of truth
                         this.ptoEntries = githubData.map(entry => {
                             const employee = this.employees.find(emp => emp.name === entry.name);
@@ -871,6 +874,8 @@
                         // Update localStorage cache
                         localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
                         return;
+                    } else {
+                        console.log('No data found in GitHub, checking fallbacks...');
                     }
                 } catch (error) {
                     console.error('Failed to load from GitHub, falling back to local data:', error);
@@ -1120,20 +1125,31 @@
             }
             
             async savePTOEntries() {
-                localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
-                
                 if (this.githubSyncEnabled) {
-                    await this.syncWithGitHub();
+                    // Try to sync to GitHub first
+                    const syncSuccess = await this.syncWithGitHub();
+                    if (syncSuccess) {
+                        // Only update localStorage if GitHub sync succeeded
+                        localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
+                    } else {
+                        console.warn('GitHub sync failed, data may not be consistent across browsers');
+                        localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
+                    }
+                } else {
+                    localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
                 }
             }
             
             async syncWithGitHub() {
                 try {
+                    console.log('Syncing to GitHub...', this.ptoEntries.length, 'entries');
                     const fileContent = this.githubService.generateFileContent(this.ptoEntries);
                     await this.githubService.updateFile(fileContent, 'Update PTO data from dashboard');
+                    console.log('GitHub sync successful');
+                    return true;
                 } catch (error) {
                     console.error('GitHub sync failed:', error);
-                    // Silently fail - data is still saved locally
+                    return false;
                 }
             }
             
