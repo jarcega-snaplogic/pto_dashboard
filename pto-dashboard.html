@@ -789,36 +789,102 @@
                 const content = `// PTO Data extracted from SnapLogic CSV file\nconst CSV_PTO_ENTRIES = ${JSON.stringify(filteredEntries, null, 2)};`;
                 return content;
             }
+            
+            async loadPTODataFromGitHub() {
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const content = atob(data.content);
+                        
+                        // Extract the JSON from the JavaScript file
+                        const jsonMatch = content.match(/const CSV_PTO_ENTRIES = (\[[\s\S]*?\]);/);
+                        if (jsonMatch) {
+                            const ptoData = JSON.parse(jsonMatch[1]);
+                            return ptoData;
+                        }
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Failed to load PTO data from GitHub:', error);
+                    return [];
+                }
+            }
         }
         
         class PTODashboard {
             constructor() {
-                this.ptoEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
+                this.ptoEntries = [];
                 this.activeRegionFilter = 'all';
                 this.activeFunctionFilter = 'all';
                 this.employees = [];
                 this.githubService = new GitHubService();
                 this.githubSyncEnabled = true;
+                this.isLoading = true;
                 this.loadEmployeeData();
             }
             
-            loadEmployeeData() {
+            async loadEmployeeData() {
                 // Employee data embedded directly to avoid CORS issues
                 this.employees = this.enhanceEmployeeData(SNAPLOGIC_EMPLOYEES);
-                this.loadCSVData();
+                
+                // Show loading indicator
+                this.showLoadingState();
+                
+                // Load PTO data from GitHub first, then fallback to localStorage and CSV
+                await this.loadPTOData();
+                
                 this.populateEmployeeDropdown();
                 this.updateFilterButtons();
                 this.initializeEventListeners();
                 this.initializeDatePicker();
                 this.renderCalendar();
                 this.renderPTOList();
+                
+                // Hide loading indicator
+                this.hideLoadingState();
             }
             
-            loadCSVData() {
-                // Load PTO data from CSV if localStorage is empty or we want to refresh
-                const existingEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
+            async loadPTOData() {
+                try {
+                    // First, try to load from GitHub (source of truth)
+                    const githubData = await this.githubService.loadPTODataFromGitHub();
+                    
+                    if (githubData && githubData.length > 0) {
+                        // Use GitHub data as the source of truth
+                        this.ptoEntries = githubData.map(entry => {
+                            const employee = this.employees.find(emp => emp.name === entry.name);
+                            return {
+                                ...entry,
+                                department: employee ? employee.department : (entry.department || 'Unknown'),
+                                location: employee ? employee.location : (entry.location || 'Unknown'),
+                                title: employee ? employee.title : (entry.title || 'Unknown')
+                            };
+                        });
+                        
+                        // Update localStorage cache
+                        localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Failed to load from GitHub, falling back to local data:', error);
+                }
                 
-                // Only load CSV data if we don't have any existing entries or if we want to merge
+                // Fallback: Load from localStorage
+                const localEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
+                
+                if (localEntries.length > 0) {
+                    this.ptoEntries = localEntries;
+                    return;
+                }
+                
+                // Final fallback: Load from embedded CSV data
                 const csvEntriesWithEmployeeData = CSV_PTO_ENTRIES.map(entry => {
                     const employee = this.employees.find(emp => emp.name === entry.name);
                     return {
@@ -829,21 +895,8 @@
                     };
                 });
                 
-                // Merge with existing entries, avoiding duplicates by checking name and dates
-                const mergedEntries = [...existingEntries];
-                csvEntriesWithEmployeeData.forEach(csvEntry => {
-                    const exists = existingEntries.some(existing => 
-                        existing.name === csvEntry.name && 
-                        existing.startDate === csvEntry.startDate &&
-                        existing.endDate === csvEntry.endDate
-                    );
-                    if (!exists) {
-                        mergedEntries.push(csvEntry);
-                    }
-                });
-                
-                this.ptoEntries = mergedEntries;
-                this.savePTOEntries();
+                this.ptoEntries = csvEntriesWithEmployeeData;
+                localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
             }
             
             enhanceEmployeeData(employees) {
@@ -1084,6 +1137,32 @@
                 }
             }
             
+            showLoadingState() {
+                // Add loading indicator to the page
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingIndicator';
+                loadingDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    text-align: center;
+                `;
+                loadingDiv.innerHTML = '<p>Loading PTO data...</p>';
+                document.body.appendChild(loadingDiv);
+            }
+            
+            hideLoadingState() {
+                const loadingDiv = document.getElementById('loadingIndicator');
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+            }
             
             setRegionFilter(region) {
                 this.activeRegionFilter = region;
