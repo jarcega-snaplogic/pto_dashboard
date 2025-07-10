@@ -1,0 +1,9 @@
+Email,Name,Department,Location/Region,Job Title,Employee start date,Request Type,Submitted At,Approvers,Status,Message,Denial Reason,Start Date,End Date,Num Days,Holidays Taken
+atdughetti@snaplogic.com,Angelica Tacca Dughetti,Solutions Engineers,Spain,Sr. Solutions Engineer,02/12/2025,Vacation / Personal Time,07/09/2025 9AM CEST,Jocelyn Arcega,Pending Approval,Holiday,N/A,09/08/2025,09/12/2025,5,0
+jarcega@snaplogic.com,Jocelyn Arcega,Sales Leadership,United Kingdom,"Head of Solutions Engineering, EMEA",02/23/2021,Vacation / Personal Time,06/24/2025 4PM BST,David Lee,Approved,,N/A,08/18/2025,08/29/2025,10,0
+kriegel@snaplogic.com,Konstantin Riegel,Solutions Engineers,Germany,Principal Solutions Engineer DACH,12/26/2024,Vacation / Personal Time,01/21/2025 9AM CET,Jocelyn Arcega,Approved,,N/A,08/11/2025,08/29/2025,15,0
+mpentzek@snaplogic.com,Markus Pentzek,Solutions Engineers,Germany,Sr. Solutions Engineer,09/28/2022,Vacation / Personal Time,06/18/2025 6PM CEST,Jocelyn Arcega,Approved,,N/A,07/17/2025,07/27/2025,7,0
+mpentzek@snaplogic.com,Markus Pentzek,Solutions Engineers,Germany,Sr. Solutions Engineer,09/28/2022,Vacation / Personal Time,06/18/2025 6PM CEST,Jocelyn Arcega,Approved,,N/A,08/11/2025,08/17/2025,5,0
+nparmar@snaplogic.com,Nilesh Parmar,Solutions Engineers,United Kingdom,Principal Solutions Engineer,02/17/2023,Vacation / Personal Time,02/03/2025 9PM GMT,Jocelyn Arcega,Approved,Iceland,N/A,08/21/2025,08/27/2025,5,0
+sokunevic@snaplogic.com,Stan Okunevic,Solutions Engineers,United Kingdom,Senior Solutions Engineer,12/10/2021,Vacation / Personal Time,05/21/2025 11AM BST,Jocelyn Arcega,Approved,"Tokyo, Yoga Retreat, etc",N/A,07/21/2025,07/25/2025,5,0
+tbranco@snaplogic.com,Toni Branco,Solutions Engineers,France,Principal Solutions Engineer,08/09/2022,Vacation (France only) - Congés payés,06/21/2025 3PM CEST,Jocelyn Arcega,Approved,,N/A,07/28/2025,08/15/2025,14,1

@@ -713,8 +713,8 @@
         // GitHub API Service for syncing PTO data
         class GitHubService {
             constructor() {
-                // Token will be set via external configuration
-                this.token = 'TOKEN_PLACEHOLDER';
+                // Token will be injected at build time via environment variables
+                this.token = '${GITHUB_TOKEN}';  // Will be replaced during deployment
                 this.owner = 'jarcega-snaplogic';
                 this.repo = 'pto_dashboard';
                 this.filePath = 'pto_data_from_csv.js';
@@ -724,21 +724,35 @@
             
             async loadToken() {
                 try {
-                    // In production, replace TOKEN_PLACEHOLDER with actual token
-                    if (this.token === 'TOKEN_PLACEHOLDER') {
-                        // Decode token from base64 to avoid detection
-                        const encoded = 'Z2hwX1ZaQmNBeFYzVjkxY21rSjFOeWpjZGxNWElQRVZHRjNEVFZqNg==';
-                        this.token = atob(encoded);
-                        console.log('Token loaded successfully');
+                    // Check if token was properly injected during build
+                    if (this.token === '${GITHUB_TOKEN}' || !this.token || this.token.length < 10) {
+                        console.error('GitHub token not properly configured. Please check deployment settings.');
+                        this.token = null;
+                        return;
                     }
+                    
+                    // Validate token format
+                    if (!this.token.startsWith('ghp_')) {
+                        console.error('Invalid GitHub token format. Token should start with "ghp_"');
+                        this.token = null;
+                        return;
+                    }
+                    
+                    console.log('GitHub token loaded successfully, length:', this.token.length);
                 } catch (error) {
                     console.error('Failed to load token:', error);
+                    this.token = null;
                 }
             }
             
             async getFileSHA() {
                 try {
                     await this.tokenReady; // Wait for token to be loaded
+                    
+                    if (!this.token) {
+                        throw new Error('No GitHub token available');
+                    }
+                    
                     console.log('Using token for SHA request:', this.token.substring(0, 10) + '...');
                     
                     const response = await fetch(this.apiUrl, {
@@ -797,7 +811,14 @@
             async loadPTODataFromGitHub() {
                 try {
                     await this.tokenReady; // Wait for token to be loaded
-                    console.log('Using token for data request:', this.token.substring(0, 10) + '...');
+                    
+                    // Check if token is available
+                    if (!this.token) {
+                        console.log('No GitHub token available, skipping GitHub sync');
+                        return [];
+                    }
+                    
+                    console.log('Using token for data request:', this.token.substring(0, 10) + '...', 'Full length:', this.token.length);
                     
                     const response = await fetch(this.apiUrl, {
                         headers: {

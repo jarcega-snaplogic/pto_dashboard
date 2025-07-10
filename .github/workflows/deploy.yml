@@ -1,0 +1,52 @@
+name: Deploy PTO Dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Inject GitHub token into HTML
+      run: |
+        # Replace the placeholder with actual token from secrets
+        sed -i "s/\${GITHUB_TOKEN}/${{ secrets.PTO_GITHUB_TOKEN }}/g" pto-dashboard.html
+        
+        # Verify token was injected (without exposing it)
+        if grep -q "\${GITHUB_TOKEN}" pto-dashboard.html; then
+          echo "ERROR: Token placeholder was not replaced"
+          exit 1
+        else
+          echo "Token successfully injected into HTML"
+        fi
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
