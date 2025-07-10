@@ -208,6 +208,26 @@
             </form>
         </div>
         
+        <div class="form-section">
+            <h3>Settings</h3>
+            <div class="form-group">
+                <label for="githubTokenInput">GitHub Personal Access Token:</label>
+                <input type="password" id="githubTokenInput" placeholder="Enter your GitHub token for sync functionality">
+                <small style="display: block; color: #666; margin-top: 5px;">
+                    Required for GitHub sync. Token should have 'Contents' write permission for this repository.
+                </small>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="githubSyncToggle" checked>
+                    Sync changes to GitHub repository
+                </label>
+                <small style="display: block; color: #666; margin-top: 5px;">
+                    When enabled, PTO changes will be automatically saved to the GitHub repository
+                </small>
+            </div>
+        </div>
+        
         <div class="filter-section">
             <h3>Filter by Region</h3>
             <div class="filter-buttons" id="regionFilters">
@@ -710,12 +730,85 @@
           }
         ];
         
+        // GitHub API Service for syncing PTO data
+        class GitHubService {
+            constructor() {
+                this.token = localStorage.getItem('githubToken') || '';
+                this.owner = 'jarcega-snaplogic';
+                this.repo = 'pto_dashboard';
+                this.filePath = 'pto_data_from_csv.js';
+                this.apiUrl = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${this.filePath}`;
+            }
+            
+            setToken(token) {
+                this.token = token;
+                localStorage.setItem('githubToken', token);
+            }
+            
+            async getFileSHA() {
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.sha;
+                    }
+                    throw new Error(`Failed to get file SHA: ${response.status}`);
+                } catch (error) {
+                    console.error('Error getting file SHA:', error);
+                    throw error;
+                }
+            }
+            
+            async updateFile(content, message = 'Update PTO data from dashboard') {
+                try {
+                    const sha = await this.getFileSHA();
+                    const base64Content = btoa(content);
+                    
+                    const response = await fetch(this.apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`,
+                            'Accept': 'application/vnd.github+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            content: base64Content,
+                            sha: sha
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    throw new Error(`Failed to update file: ${response.status}`);
+                } catch (error) {
+                    console.error('Error updating GitHub file:', error);
+                    throw error;
+                }
+            }
+            
+            generateFileContent(ptoEntries) {
+                const filteredEntries = ptoEntries.filter(entry => entry.id >= 1000);
+                const content = `// PTO Data extracted from SnapLogic CSV file\nconst CSV_PTO_ENTRIES = ${JSON.stringify(filteredEntries, null, 2)};`;
+                return content;
+            }
+        }
+        
         class PTODashboard {
             constructor() {
                 this.ptoEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
                 this.activeRegionFilter = 'all';
                 this.activeFunctionFilter = 'all';
                 this.employees = [];
+                this.githubService = new GitHubService();
+                this.githubSyncEnabled = JSON.parse(localStorage.getItem('githubSyncEnabled') || 'true');
                 this.loadEmployeeData();
             }
             
@@ -844,6 +937,19 @@
                     e.preventDefault();
                     this.addPTOEntry();
                 });
+                
+                document.getElementById('githubSyncToggle').addEventListener('change', (e) => {
+                    this.githubSyncEnabled = e.target.checked;
+                    localStorage.setItem('githubSyncEnabled', JSON.stringify(this.githubSyncEnabled));
+                });
+                
+                document.getElementById('githubTokenInput').addEventListener('input', (e) => {
+                    this.githubService.setToken(e.target.value);
+                });
+                
+                // Set initial state of toggle and token
+                document.getElementById('githubSyncToggle').checked = this.githubSyncEnabled;
+                document.getElementById('githubTokenInput').value = this.githubService.token;
             }
             
             populateEmployeeDropdown() {
@@ -938,7 +1044,7 @@
                 return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             }
             
-            addPTOEntry() {
+            async addPTOEntry() {
                 const employeeSelect = document.getElementById('employeeSelect');
                 const selectedDates = this.datePicker.selectedDates;
                 
@@ -968,7 +1074,7 @@
                 };
                 
                 this.ptoEntries.push(entry);
-                this.savePTOEntries();
+                await this.savePTOEntries();
                 this.renderCalendar();
                 this.renderPTOList();
                 
@@ -976,15 +1082,79 @@
                 this.datePicker.clear();
             }
             
-            deletePTOEntry(id) {
+            async deletePTOEntry(id) {
                 this.ptoEntries = this.ptoEntries.filter(entry => entry.id !== id);
-                this.savePTOEntries();
+                await this.savePTOEntries();
                 this.renderCalendar();
                 this.renderPTOList();
             }
             
-            savePTOEntries() {
+            async savePTOEntries() {
                 localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
+                
+                if (this.githubSyncEnabled && this.githubService.token) {
+                    await this.syncWithGitHub();
+                }
+            }
+            
+            async syncWithGitHub() {
+                try {
+                    this.showSyncStatus('Syncing with GitHub...', 'syncing');
+                    
+                    const fileContent = this.githubService.generateFileContent(this.ptoEntries);
+                    await this.githubService.updateFile(fileContent, 'Update PTO data from dashboard');
+                    
+                    this.showSyncStatus('Synced successfully!', 'success');
+                    setTimeout(() => this.hideSyncStatus(), 3000);
+                } catch (error) {
+                    console.error('GitHub sync failed:', error);
+                    this.showSyncStatus('Sync failed - saved locally only', 'error');
+                    setTimeout(() => this.hideSyncStatus(), 5000);
+                }
+            }
+            
+            showSyncStatus(message, type) {
+                let statusDiv = document.getElementById('syncStatus');
+                if (!statusDiv) {
+                    statusDiv = document.createElement('div');
+                    statusDiv.id = 'syncStatus';
+                    statusDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 10px 20px;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        font-weight: bold;
+                        z-index: 1000;
+                        max-width: 300px;
+                    `;
+                    document.body.appendChild(statusDiv);
+                }
+                
+                statusDiv.textContent = message;
+                statusDiv.className = `sync-status sync-${type}`;
+                
+                // Apply styles based on type
+                if (type === 'syncing') {
+                    statusDiv.style.backgroundColor = '#007bff';
+                    statusDiv.style.color = 'white';
+                } else if (type === 'success') {
+                    statusDiv.style.backgroundColor = '#28a745';
+                    statusDiv.style.color = 'white';
+                } else if (type === 'error') {
+                    statusDiv.style.backgroundColor = '#dc3545';
+                    statusDiv.style.color = 'white';
+                }
+                
+                statusDiv.style.display = 'block';
+            }
+            
+            hideSyncStatus() {
+                const statusDiv = document.getElementById('syncStatus');
+                if (statusDiv) {
+                    statusDiv.style.display = 'none';
+                }
             }
             
             setRegionFilter(region) {
