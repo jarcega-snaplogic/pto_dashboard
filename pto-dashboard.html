@@ -188,7 +188,7 @@
     <div class="container">
         <div style="position: relative;">
             <div style="position: absolute; top: 0; right: 0; font-size: 10px; color: #999; opacity: 0.7;">
-                v1.2.2
+                v1.2.3
             </div>
             <h1>PTO Dashboard 📅</h1>
             <p style="text-align: center; color: #666; font-style: italic;">
@@ -734,10 +734,14 @@
                     
                     // Check if token was properly injected during build
                     console.log('Debug: Checking token injection - placeholder check:', this.token === '${GITHUB_TOKEN}');
-                    console.log('Debug: Checking token injection - exists check:', !!this.token);
-                    console.log('Debug: Checking token injection - length check:', this.token ? this.token.length : 'null', '>=', 10);
+                    console.log('Debug: Token starts with github_pat:', this.token.startsWith('github_pat_'));
+                    console.log('Debug: Token includes placeholder:', this.token.includes('${GITHUB_TOKEN}'));
+                    console.log('Debug: Exact token comparison check:', JSON.stringify(this.token) === JSON.stringify('${GITHUB_TOKEN}'));
                     
-                    if (this.token === '${GITHUB_TOKEN}') {
+                    // The token appears to be injected correctly, so skip the placeholder check
+                    if (this.token.startsWith('github_pat_') || this.token.startsWith('ghp_')) {
+                        console.log('Debug: Token format looks valid, proceeding...');
+                    } else if (this.token === '${GITHUB_TOKEN}' || this.token.includes('${GITHUB_TOKEN}')) {
                         console.error('GitHub token placeholder was not replaced during build');
                         this.token = null;
                         return;
