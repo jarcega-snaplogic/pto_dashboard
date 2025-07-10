@@ -95,5 +95,14 @@ const CSV_PTO_ENTRIES = [
     "department": "Sales - EMEA",
     "location": "Remote (France)",
     "title": "Principal Solutions Engineer"
+  },
+  {
+    "id": 1752185602254,
+    "name": "Abrar Ahmed",
+    "department": "Technical Support",
+    "location": "Gaian Solutions (India)",
+    "title": "Platinum Plus",
+    "startDate": "2025-07-16",
+    "endDate": "2025-07-24"
   }
 ];
