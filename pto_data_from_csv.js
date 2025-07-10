@@ -90,7 +90,7 @@ const CSV_PTO_ENTRIES = [
     "startDate": "2025-07-28",
     "endDate": "2025-08-15",
     "status": "Approved",
-    "requestType": "Vacation (France only) - Congés payés",
+    "requestType": "Vacation (France only) - CongÃ©s payÃ©s",
     "message": "",
     "department": "Sales - EMEA",
     "location": "Remote (France)",
@@ -102,6 +102,15 @@ const CSV_PTO_ENTRIES = [
     "department": "Channel Sales",
     "location": "London, UK",
     "title": "Channel Sales Director Northern Europe",
+    "startDate": "2025-07-09",
+    "endDate": "2025-07-11"
+  },
+  {
+    "id": 1752185389640,
+    "name": "Maria Hercules",
+    "department": "Customer Success",
+    "location": "London, UK",
+    "title": "Director, Customer Success EMEA",
     "startDate": "2025-07-09",
     "endDate": "2025-07-11"
   }
