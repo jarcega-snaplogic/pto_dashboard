@@ -34,16 +34,25 @@ jobs:
         
       - name: Inject GitHub token into HTML
         run: |
+          # Debug: Show we have the secret (without exposing it)
+          echo "Secret length: ${#PTO_GITHUB_TOKEN}"
+          echo "Secret starts with: ${PTO_GITHUB_TOKEN:0:4}..."
+          
           # Replace the placeholder with actual token from secrets
-          sed -i "s/\${GITHUB_TOKEN}/${{ secrets.PTO_GITHUB_TOKEN }}/g" pto-dashboard.html
+          sed -i "s/\\\${GITHUB_TOKEN}/${{ secrets.PTO_GITHUB_TOKEN }}/g" pto-dashboard.html
           
           # Verify token was injected (without exposing it)
           if grep -q "\${GITHUB_TOKEN}" pto-dashboard.html; then
             echo "ERROR: Token placeholder was not replaced"
+            grep -n "\${GITHUB_TOKEN}" pto-dashboard.html || true
             exit 1
           else
             echo "Token successfully injected into HTML"
+            # Show the injected line (but only first few chars)
+            grep -n "this.token = " pto-dashboard.html | head -1 | sed 's/ghp_[a-zA-Z0-9]*/ghp_[REDACTED]/g'
           fi
+        env:
+          PTO_GITHUB_TOKEN: ${{ secrets.PTO_GITHUB_TOKEN }}
           
       - name: Setup Pages
         uses: actions/configure-pages@v5
