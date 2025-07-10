@@ -95,14 +95,5 @@ const CSV_PTO_ENTRIES = [
     "department": "Sales - EMEA",
     "location": "Remote (France)",
     "title": "Principal Solutions Engineer"
-  },
-  {
-    "id": 1752182457738,
-    "name": "Adam Nash",
-    "department": "Channel Sales",
-    "location": "London, UK",
-    "title": "Channel Sales Director Northern Europe",
-    "startDate": "2025-07-09",
-    "endDate": "2025-07-11"
   }
 ];
