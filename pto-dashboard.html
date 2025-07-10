@@ -188,7 +188,7 @@
     <div class="container">
         <div style="position: relative;">
             <div style="position: absolute; top: 0; right: 0; font-size: 10px; color: #999; opacity: 0.7;">
-                v1.2.1
+                v1.2.2
             </div>
             <h1>PTO Dashboard 📅</h1>
             <p style="text-align: center; color: #666; font-style: italic;">
@@ -733,20 +733,30 @@
                     console.log('Debug: Token length:', this.token ? this.token.length : 'null');
                     
                     // Check if token was properly injected during build
-                    if (this.token === '${GITHUB_TOKEN}' || !this.token || this.token.length < 10) {
-                        console.error('GitHub token not properly configured. Token value:', this.token);
-                        console.error('This means the GitHub Actions workflow did not inject the token properly.');
-                        console.error('Check: 1) PTO_GITHUB_TOKEN secret exists, 2) Workflow ran successfully');
+                    console.log('Debug: Checking token injection - placeholder check:', this.token === '${GITHUB_TOKEN}');
+                    console.log('Debug: Checking token injection - exists check:', !!this.token);
+                    console.log('Debug: Checking token injection - length check:', this.token ? this.token.length : 'null', '>=', 10);
+                    
+                    if (this.token === '${GITHUB_TOKEN}') {
+                        console.error('GitHub token placeholder was not replaced during build');
+                        this.token = null;
+                        return;
+                    }
+                    
+                    if (!this.token || this.token.length < 10) {
+                        console.error('GitHub token is empty or too short. Length:', this.token ? this.token.length : 'null');
                         this.token = null;
                         return;
                     }
                     
                     // Validate token format (both classic and fine-grained tokens)
+                    console.log('Debug: Validating token format, starts with:', this.token.substring(0, 15));
                     if (!this.token.startsWith('ghp_') && !this.token.startsWith('github_pat_')) {
                         console.error('Invalid GitHub token format. Token should start with "ghp_" or "github_pat_", got:', this.token.substring(0, 15));
                         this.token = null;
                         return;
                     }
+                    console.log('Debug: Token format validation passed!');
                     
                     console.log('GitHub token loaded successfully, length:', this.token.length);
                 } catch (error) {
