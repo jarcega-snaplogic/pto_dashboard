@@ -113,5 +113,14 @@ const CSV_PTO_ENTRIES = [
     "title": "Director, Customer Success EMEA",
     "startDate": "2025-07-09",
     "endDate": "2025-07-11"
+  },
+  {
+    "id": 1752185560963,
+    "name": "AJ Patel",
+    "department": "General Administration",
+    "location": "San Mateo, CA",
+    "title": "Sr. Director, Go To Market Finance",
+    "startDate": "2025-08-02",
+    "endDate": "2025-08-03"
   }
 ];
