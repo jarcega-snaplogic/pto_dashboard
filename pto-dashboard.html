@@ -719,7 +719,7 @@
                 this.repo = 'pto_dashboard';
                 this.filePath = 'pto_data_from_csv.js';
                 this.apiUrl = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${this.filePath}`;
-                this.loadToken();
+                this.tokenReady = this.loadToken();
             }
             
             async loadToken() {
@@ -738,6 +738,9 @@
             
             async getFileSHA() {
                 try {
+                    await this.tokenReady; // Wait for token to be loaded
+                    console.log('Using token for SHA request:', this.token.substring(0, 10) + '...');
+                    
                     const response = await fetch(this.apiUrl, {
                         headers: {
                             'Authorization': `Bearer ${this.token}`,
@@ -793,12 +796,17 @@
             
             async loadPTODataFromGitHub() {
                 try {
+                    await this.tokenReady; // Wait for token to be loaded
+                    console.log('Using token for data request:', this.token.substring(0, 10) + '...');
+                    
                     const response = await fetch(this.apiUrl, {
                         headers: {
                             'Authorization': `Bearer ${this.token}`,
                             'Accept': 'application/vnd.github+json'
                         }
                     });
+                    
+                    console.log('GitHub API response status:', response.status);
                     
                     if (response.ok) {
                         const data = await response.json();
@@ -810,6 +818,8 @@
                             const ptoData = JSON.parse(jsonMatch[1]);
                             return ptoData;
                         }
+                    } else {
+                        console.error('GitHub API error:', response.status, response.statusText);
                     }
                     return [];
                 } catch (error) {
