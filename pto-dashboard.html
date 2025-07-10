@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTO Dashboard - Because Micromanaging is Fun</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="date"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .calendar-section {
+            margin-top: 30px;
+        }
+        
+        .month-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .calendar-day {
+            background: white;
+            padding: 10px;
+            min-height: 60px;
+            border: 1px solid #eee;
+            position: relative;
+        }
+        
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #999;
+        }
+        
+        .pto-entry {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 1px 0;
+            display: block;
+        }
+        
+        .employee-list {
+            margin-top: 20px;
+        }
+        
+        .employee-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            float: right;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .filter-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .filter-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PTO Dashboard 📅</h1>
+        <p style="text-align: center; color: #666; font-style: italic;">
+            "Because knowing when people aren't working is apparently crucial to business success"
+        </p>
+        
+        <div class="form-section">
+            <h3>Add PTO Entry</h3>
+            <form id="ptoForm">
+                <div class="form-group">
+                    <label for="employeeSelect">Employee Name:</label>
+                    <select id="employeeSelect" required>
+                        <option value="">Select employee...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ptoDateRange">PTO Date Range:</label>
+                    <input type="text" id="ptoDateRange" placeholder="Select date range..." required>
+                </div>
+                <button type="submit">Add PTO Entry</button>
+            </form>
+        </div>
+        
+        <div class="filter-section">
+            <h3>Filter by Region</h3>
+            <div class="filter-buttons" id="regionFilters">
+                <!-- Region buttons will be populated dynamically -->
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <h3>Filter by Function</h3>
+            <div class="filter-buttons" id="functionFilters">
+                <!-- Function buttons will be populated dynamically -->
+            </div>
+        </div>
+        
+        <div class="employee-list">
+            <h3>Current PTO Entries</h3>
+            <div id="ptoEntries"></div>
+        </div>
+        
+        <div class="calendar-section">
+            <h3>3-Month PTO Calendar (July - September 2025)</h3>
+            <div id="calendarContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // SnapLogic Employee Data - extracted from org charts (456 employees)
+        const SNAPLOGIC_EMPLOYEES = [
+          {"name": "Colleen Carroll", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief of Staff to the CEO"},
+          {"name": "Gaurav Dhillon", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief Executive Officer"},
+          {"name": "Kathy Daw", "department": "Executive Team", "location": "San Mateo, CA", "title": "Special Assistant, Office of the CEO"},
+          {"name": "Vaikom Krishnan", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief Product Officer"},
+          {"name": "Ahsan Malik", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief Financial Officer"},
+          {"name": "Jeremiah Stone", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief Technology Officer"},
+          {"name": "Dayle Hall", "department": "Executive Team", "location": "San Mateo, CA", "title": "Chief Marketing Officer"},
+          {"name": "David Lee", "department": "Executive Team", "location": "Remote (CA)", "title": "Chief Sales Officer"},
+          {"name": "Cassie Capano", "department": "Executive Team", "location": "San Mateo, CA", "title": "VP, People"},
+          {"name": "Anjana Kashyap", "department": "Executive Team", "location": "San Mateo, CA", "title": "SVP, Customer Success"},
+          {"name": "Jack Tang", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Director, Strategic Finance"},
+          {"name": "AJ Patel", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Director, Go To Market Finance"},
+          {"name": "Frank Huang", "department": "General Administration", "location": "San Mateo, CA", "title": "VP, Accounting"},
+          {"name": "Joe Minutoli", "department": "General Administration", "location": "San Mateo, CA", "title": "Head of Legal"},
+          {"name": "Billy Wong", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Finance Manager"},
+          {"name": "Nicole Houts", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Finance Manager"},
+          {"name": "Tina Vuong", "department": "General Administration", "location": "San Mateo, CA", "title": "Revenue Accounting Manager"},
+          {"name": "Naomi Arai", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Global Payroll Manager"},
+          {"name": "Hilda Leung", "department": "General Administration", "location": "San Mateo, CA", "title": "Controller"},
+          {"name": "Luke Lee", "department": "General Administration", "location": "Remote (CA)", "title": "Finance Intern"},
+          {"name": "Vanessa Fernandes", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Revenue Accountant"},
+          {"name": "Harpreet Kaur", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Accountant I"},
+          {"name": "Basira Ahmadi", "department": "General Administration", "location": "San Mateo, CA", "title": "Staff Accountant"},
+          {"name": "Gabriela Lopez", "department": "General Administration", "location": "San Mateo, CA", "title": "Accounts Receivable Specialist"},
+          {"name": "Erika Kuo", "department": "General Administration", "location": "San Mateo, CA", "title": "Sr. Accountant"},
+          {"name": "Aleksandra Drage", "department": "General Administration", "location": "London, UK", "title": "Sr. Accountant, EMEA & APAC"},
+          {"name": "Winnie Wong", "department": "People", "location": "San Mateo, CA", "title": "Director, People"},
+          {"name": "Alexis Piper", "department": "People", "location": "Remote (CA)", "title": "People Success Partner"},
+          {"name": "Nishi Karim", "department": "People", "location": "San Mateo, CA", "title": "People Experience Specialist"},
+          {"name": "Irene Tran", "department": "People", "location": "San Mateo, CA", "title": "People Analytics and Technology Lead"},
+          {"name": "Gemma Smith", "department": "Marketing", "location": "Remote (UK)", "title": "Sr. Communications Manager EMEA"},
+          {"name": "Adrian Richardson", "department": "Marketing", "location": "San Mateo, CA", "title": "Sr. Manager, Corporate Communications"},
+          {"name": "Nuala Coogan", "department": "Marketing", "location": "San Mateo, CA", "title": "Sr. Director, Global Field Marketing"},
+          {"name": "Julie Branthomme", "department": "Marketing", "location": "Remote (France)", "title": "Director, Field Marketing EMEA"},
+          {"name": "Cinthia Montoro", "department": "Marketing", "location": "Remote (France)", "title": "Marketing Specialist"},
+          {"name": "Hannah Davies", "department": "Marketing", "location": "Remote (UK)", "title": "Sr. Field Marketing Manager"},
+          {"name": "Amber Garrett", "department": "Marketing", "location": "Remote (TX)", "title": "Sr. Field Marketing Manager"},
+          {"name": "Sinem Gülcehre", "department": "Marketing", "location": "Remote (Germany)", "title": "Marketing Manager, Central Europe"},
+          {"name": "Caroline Beschel", "department": "Marketing", "location": "Remote (WA)", "title": "Marketing Chief of Staff"},
+          {"name": "Tim White", "department": "Marketing", "location": "San Mateo, CA", "title": "VP, Corporate Marketing"},
+          {"name": "Praneal Narayan", "department": "Marketing", "location": "San Mateo, CA", "title": "Sr. Director, Solutions Marketing"},
+          {"name": "Shreha Jain", "department": "Marketing", "location": "San Mateo, CA", "title": "Director, Marketing Ops"},
+          {"name": "Stephanie Courtois", "department": "Marketing", "location": "Remote (FL)", "title": "Sr. Website Marketing Manager"},
+          {"name": "Daphne Monroe", "department": "Marketing", "location": "Remote (SC)", "title": "Sr. Solutions Marketing Manager"},
+          {"name": "Alex Kelmenson", "department": "Marketing", "location": "Remote (CA)", "title": "Sr. Program Manager, Marketing Ops"},
+          {"name": "Katrina Nelson", "department": "Marketing", "location": "Remote (OR)", "title": "Sr. Digital Designer"},
+          {"name": "Scott Olsen", "department": "Marketing", "location": "San Mateo, CA", "title": "Sr. Customer Marketing Manager"},
+          {"name": "Jack Madden", "department": "Marketing", "location": "San Mateo, CA", "title": "Marketing Operations Manager"},
+          {"name": "Christopher Kosek", "department": "Marketing", "location": "San Mateo, CA", "title": "Sr. Brand Designer"},
+          {"name": "Josie Fey", "department": "Marketing", "location": "Remote (OR)", "title": "Sr. Content Marketing Manager"},
+          {"name": "Simmon Leone", "department": "Product", "location": "San Mateo, CA", "title": "Executive Administrative Assistant to the CTO & CPO"},
+          {"name": "Manish Rai", "department": "Product", "location": "San Mateo, CA", "title": "VP, Product Marketing"},
+          {"name": "Mark Gibbs", "department": "Product", "location": "San Mateo, CA", "title": "VP, Product Management"},
+          {"name": "Matthew Holloway", "department": "Product", "location": "Remote (WA)", "title": "Global Head of Design"},
+          {"name": "Pat Traynor", "department": "Product", "location": "Remote (IL)", "title": "Head of Global Enterprise Solutions Group"},
+          {"name": "Ben Thomas", "department": "Product", "location": "San Mateo, CA", "title": "Manager, Software Engineer"},
+          {"name": "Dhananjay Bapat", "department": "Product", "location": "San Mateo, CA", "title": "Sr. Technical Product Marketing Manager"},
+          {"name": "Kamakshi Narayan", "department": "Product", "location": "San Mateo, CA", "title": "Director, Product Management"},
+          {"name": "Noah Ilinsky", "department": "Product", "location": "Remote (WA)", "title": "Principal UX Designer"},
+          {"name": "Guy Murphy", "department": "Product", "location": "London, UK", "title": "Principal Enterprise Architect"},
+          {"name": "Hong Xu", "department": "Product", "location": "San Mateo, CA", "title": "Data & Analytics Engineer"},
+          {"name": "Dominic Wellington", "department": "Product", "location": "Remote, Italy", "title": "Product Marketing Director"},
+          {"name": "Kate Shaw", "department": "Product", "location": "San Mateo, CA", "title": "Sr. Product Manager"},
+          {"name": "Annette Rodriguez", "department": "Product", "location": "Remote (TX)", "title": "Lead, Product Trainer"},
+          {"name": "Bash Badawi", "department": "Product", "location": "Remote (FL)", "title": "Enterprise Architect"},
+          {"name": "Jeffrey Wong", "department": "Product", "location": "San Mateo, CA", "title": "Technical Product Marketing Director"},
+          {"name": "Sid Varma", "department": "Product", "location": "Remote (CA)", "title": "Sr. Product Manager"},
+          {"name": "Jackie Curry", "department": "Product", "location": "Remote (WV)", "title": "Principal UX Designer"},
+          {"name": "Ram Bysani", "department": "Product", "location": "San Mateo, CA", "title": "Enterprise Architect"},
+          {"name": "Riya Malik", "department": "Product", "location": "San Mateo, CA", "title": "Product Marketing Intern"},
+          {"name": "Tom Graham", "department": "Product", "location": "London, UK", "title": "Sr. Product Manager"},
+          {"name": "Tony Santos", "department": "Product", "location": "Remote (WA)", "title": "Principal UX Designer"},
+          {"name": "Karthik Bandi", "department": "Product", "location": "Remote (TX)", "title": "VP, Global Professional Services"},
+          {"name": "Bill Romano", "department": "Product", "location": "Remote (SC)", "title": "Partner Learning & Enablement Director"},
+          {"name": "Adam Bewley", "department": "Product", "location": "Remote (IL)", "title": "Learning & Enablement Operations Manager"},
+          {"name": "Steve Clarke", "department": "Professional Services", "location": "London, UK", "title": "Principal Enterprise Architect"},
+          {"name": "Christopher Ward", "department": "Professional Services", "location": "London, UK", "title": "AI Center of Enablement (COE) Director"},
+          {"name": "Steve Young", "department": "Professional Services", "location": "Remote (AUS)", "title": "Sr. Engagement Manager"},
+          {"name": "Soundarya Lahari Vempalli", "department": "Professional Services", "location": "Remote (CA)", "title": "PS Operations Manager"},
+          {"name": "Ali Sharfian", "department": "Professional Services", "location": "Remote (CA)", "title": "PS Architect"},
+          {"name": "Hamza Hanchi", "department": "Professional Services", "location": "Remote (Sweden)", "title": "Sr. Solutions Architect"},
+          {"name": "Roberto Oliva", "department": "Professional Services", "location": "Remote (Italy)", "title": "Principal Solutions Architect"},
+          {"name": "Paromita Das", "department": "Professional Services", "location": "Remote (ON Canada)", "title": "PS Architect"},
+          {"name": "Vineesha Mudduluru", "department": "Professional Services", "location": "Remote (TX)", "title": "Sr. PS Engineer"},
+          {"name": "Duncan Mollison", "department": "Professional Services", "location": "London, UK", "title": "PS Project Manager EMEA"},
+          {"name": "Luca Drossatos", "department": "Professional Services", "location": "London, UK", "title": "Principal Solutions Architect"},
+          {"name": "Ingo Sauerzapf", "department": "Professional Services", "location": "San Mateo, CA", "title": "Sr. PS Architect"},
+          {"name": "Nidhi Sohal", "department": "Professional Services", "location": "San Mateo, CA", "title": "PS Engineer"},
+          {"name": "Kory Knickerbocker", "department": "Professional Services", "location": "Remote (OH)", "title": "Sr. PS Architect"},
+          {"name": "Madhu Gupta", "department": "Professional Services", "location": "Remote (NJ)", "title": "Sr. Project Manager"},
+          {"name": "Dheeraj Maganti", "department": "Professional Services", "location": "Remote (TX)", "title": "Technical Director"},
+          {"name": "Taran Kondamuru", "department": "Professional Services", "location": "San Mateo, CA", "title": "Professional Services Intern"},
+          {"name": "Manikanth Thammareddy", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS Manager"},
+          {"name": "Harikrishna Cherukuri", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Mohammed Khan", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS Ops"},
+          {"name": "Aneel Matthai", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS Dev"},
+          {"name": "Naresh Singam", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Harsha Konduru", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Syed Nazer Hussaini", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Satya Prasad", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Satya Chelluri", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Goutam B", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "R.V. Srinivasa Rao", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Suryanarayana V", "department": "Professional Services", "location": "Gaian Solutions (India)", "title": "PS - Dev"},
+          {"name": "Emilee Johnson", "department": "Global Field Operations", "location": "Remote (CA)", "title": "Head of Enablement and Sales Transformation"},
+          {"name": "Bo Luongo", "department": "Global Field Operations", "location": "Remote (TX)", "title": "Global VP, OEM"},
+          {"name": "Doug Merrill", "department": "Global Field Operations", "location": "Remote (CA)", "title": "RVP, Sales West AMER"},
+          {"name": "Jennifer Bentley", "department": "Global Field Operations", "location": "Remote (MA)", "title": "RVP, Sales East AMER"},
+          {"name": "Jocelyn Arcega", "department": "Global Field Operations", "location": "London, UK", "title": "Head of Solutions Engineering, EMEA"},
+          {"name": "Mike Smith", "department": "Global Field Operations", "location": "Remote (TX)", "title": "Revenue Enablement Manager"},
+          {"name": "Roger Coles", "department": "Global Field Operations", "location": "London, UK", "title": "OEM Sales Director"},
+          {"name": "Danielle Carty", "department": "Global Field Operations", "location": "Remote (Canada)", "title": "Global VP, Channels"},
+          {"name": "Ravi Krishnan", "department": "Global Field Operations", "location": "Remote (CA)", "title": "Head of Solution Engineering, AMER"},
+          {"name": "Daryl Watts", "department": "Global Field Operations", "location": "London, UK", "title": "Head of Revenue Growth, EMEA"},
+          {"name": "Rachel Fournier", "department": "Global Field Operations", "location": "Remote (CA)", "title": "Sales Programs and Operational Excellence Director"},
+          {"name": "Mark Thompson", "department": "Global Field Operations", "location": "Remote (KS)", "title": "OEM Sales Director"},
+          {"name": "Michael Depallens", "department": "Global Field Operations", "location": "Remote (UT)", "title": "Head of Revenue Growth, AMER"},
+          {"name": "Sebastian Flach", "department": "Global Field Operations", "location": "Remote (Germany)", "title": "RVP, Sales DACH"},
+          {"name": "Andrea Snelson", "department": "Global Field Operations", "location": "Remote (WA)", "title": "Sales Programs and Operations Manager"},
+          {"name": "Dawn Williams", "department": "Global Field Operations", "location": "Remote (CA)", "title": "OEM Sales Director"},
+          {"name": "Nick Pike", "department": "Global Field Operations", "location": "London, UK", "title": "RVP Sales, Northern Europe"},
+          {"name": "Pascal Bouche", "department": "Global Field Operations", "location": "Remote (France)", "title": "RVP Sales, Southern Europe"},
+          {"name": "Mahesh B", "department": "Global Field Operations", "location": "Gaian Solutions (India)", "title": "SalesForce D.C."},
+          {"name": "Catherine Delaunay", "department": "Channel Sales", "location": "Remote (France)", "title": "Channel Sales Director Central EMEA"},
+          {"name": "Adam Nash", "department": "Channel Sales", "location": "London, UK", "title": "Channel Sales Director Northern Europe"},
+          {"name": "Rachel Harrington", "department": "Channel Sales", "location": "Remote (MI)", "title": "Channel Sales Director East NA"},
+          {"name": "Liz Andrew", "department": "Channel Sales", "location": "Remote (Canada)", "title": "Global GSI Director"},
+          {"name": "Victor Bishay", "department": "Channel Sales", "location": "Remote (Canada)", "title": "Cloud Partnerships Director"},
+          {"name": "Roland Mackert", "department": "Channel Sales", "location": "Remote (Germany)", "title": "Channel Sales Director, DACH"},
+          {"name": "Michael Pap Rocki", "department": "Global Field Operations", "location": "San Mateo, CA", "title": "VP, Revenue Operations and Strategic Growth"},
+          {"name": "Aidan Murphy", "department": "Global Field Operations", "location": "Remote (NC)", "title": "Sr. Revenue Operations Manager"},
+          {"name": "Alda Borden", "department": "Global Field Operations", "location": "San Mateo, CA", "title": "Deal Desk Director"},
+          {"name": "Raghav Krishnan", "department": "Global Field Operations", "location": "San Mateo, CA", "title": "Sales Operations Intern"},
+          {"name": "Christopher Barton", "department": "Global Field Operations", "location": "London, UK", "title": "Sales Operations Manager"},
+          {"name": "Randa Magrino", "department": "Global Field Operations", "location": "New York, NY", "title": "Deal Desk Manager"},
+          {"name": "Dan Smith", "department": "Global Field Operations", "location": "San Mateo, CA", "title": "Sales Operations Manager"},
+          {"name": "Jason Christensen", "department": "Inside Sales", "location": "Remote (UT)", "title": "Business Development Representative"},
+          {"name": "Nick Linsmayer", "department": "Inside Sales", "location": "Remote (CA)", "title": "Associate Inside Sales Account Executive"},
+          {"name": "Sid Shah", "department": "Inside Sales", "location": "Remote (UT)", "title": "Business Development Representative"},
+          {"name": "Anthony Hunt", "department": "Inside Sales", "location": "Remote (UT)", "title": "Inside Sales Account Executive"},
+          {"name": "Ian Mershon", "department": "Inside Sales", "location": "Remote (UT)", "title": "Business Development Representative"},
+          {"name": "Caleb Howard", "department": "Inside Sales", "location": "Remote (UT)", "title": "Business Development Representative"},
+          {"name": "Ben Spaeth", "department": "Field Sales - East", "location": "Remote (NJ)", "title": "Enterprise Account Executive"},
+          {"name": "Aaron Rice", "department": "Field Sales - East", "location": "Remote (IL)", "title": "Enterprise Account Executive"},
+          {"name": "Kathy Hauser", "department": "Field Sales - East", "location": "Remote (NC)", "title": "Enterprise Account Executive"},
+          {"name": "Jared Giorgio", "department": "Field Sales - East", "location": "San Mateo, CA", "title": "Associate Enterprise Account Executive"},
+          {"name": "Josh Roche", "department": "Field Sales - East", "location": "Remote (CT)", "title": "Enterprise Account Executive"},
+          {"name": "Bruce Spake", "department": "Field Sales - East", "location": "Remote (MD)", "title": "Associate Enterprise Account Executive"},
+          {"name": "Kelsie Neibel", "department": "Field Sales - West", "location": "Remote (CA)", "title": "Enterprise Account Executive"},
+          {"name": "Vivek Seth", "department": "Field Sales - West", "location": "Remote (WA)", "title": "Enterprise Account Executive"},
+          {"name": "Jordan Miller", "department": "Field Sales - West", "location": "Remote (CA)", "title": "Enterprise Account Executive"},
+          {"name": "Shelly Carroll", "department": "Field Sales - West", "location": "Remote (TX)", "title": "Enterprise Account Executive"},
+          {"name": "Timothy Harris", "department": "Sales - EMEA", "location": "London, UK", "title": "Global Account Director"},
+          {"name": "Phillip Mattu", "department": "Sales - EMEA", "location": "London, UK", "title": "Enterprise Account Executive"},
+          {"name": "Amaury Guinot", "department": "Sales - EMEA", "location": "Remote (France)", "title": "Enterprise Account Executive"},
+          {"name": "Sean O'Meara", "department": "Sales - EMEA", "location": "Remote (Germany)", "title": "Enterprise Account Executive"},
+          {"name": "Daniil Kalyadin", "department": "Sales - EMEA", "location": "London, UK", "title": "Enterprise Account Executive"},
+          {"name": "Mitchell Read", "department": "Sales - EMEA", "location": "London, UK", "title": "Enterprise Account Executive"},
+          {"name": "Chiara Busini", "department": "Sales - EMEA", "location": "Remote (Spain)", "title": "Enterprise Account Executive"},
+          {"name": "Christian Gollwitzer", "department": "Sales - EMEA", "location": "Remote (Germany)", "title": "Enterprise Account Executive"},
+          {"name": "Miles Eakers", "department": "Sales - EMEA", "location": "London, UK", "title": "Enterprise Account Executive"},
+          {"name": "Nicolas Chahoud", "department": "Sales - EMEA", "location": "Remote (France)", "title": "Enterprise Account Executive"},
+          {"name": "Kristian Sablic", "department": "Sales - EMEA", "location": "Remote (Germany)", "title": "Enterprise Account Executive"},
+          {"name": "Brad Harrington", "department": "Sales - EMEA", "location": "London, UK", "title": "Sales Development Representative"},
+          {"name": "Ben Tobin", "department": "Sales - EMEA", "location": "London, UK", "title": "Team Lead, Sales Development"},
+          {"name": "Manon Bayard", "department": "Sales - EMEA", "location": "Remote (France)", "title": "Principal Solutions Engineer"},
+          {"name": "Nilesh Parmar", "department": "Sales - EMEA", "location": "London, UK", "title": "Principal Solutions Engineer"},
+          {"name": "Dennis Oppong", "department": "Sales - EMEA", "location": "London, UK", "title": "Sales Development Representative"},
+          {"name": "Matteo Pramaggiore", "department": "Sales - EMEA", "location": "Remote (Italy)", "title": "Sales Development Representative"},
+          {"name": "Toni Branco", "department": "Sales - EMEA", "location": "Remote (France)", "title": "Principal Solutions Engineer"},
+          {"name": "Stan Okunevic", "department": "Sales - EMEA", "location": "London, UK", "title": "Sr. Solutions Engineer"},
+          {"name": "Gael Gotin", "department": "Sales - EMEA", "location": "London, UK", "title": "Sales Development Representative"},
+          {"name": "Edwin Anda", "department": "Sales - EMEA", "location": "London, UK", "title": "Sales Development Representative"},
+          {"name": "Markus Pentzek", "department": "Sales - EMEA", "location": "Remote (Germany)", "title": "Sr. Solutions Engineer"},
+          {"name": "Konstantin Riegel", "department": "Sales - EMEA", "location": "Remote (Germany)", "title": "Principal Solutions Engineer"},
+          {"name": "Tom Pike", "department": "Sales - EMEA", "location": "London, UK", "title": "BVA Research Intern"},
+          {"name": "Aleksandra Kulawska", "department": "Sales - EMEA", "location": "London, UK", "title": "Solutions Engineer"},
+          {"name": "Angelica Tacca Dughetti", "department": "Sales - EMEA", "location": "Remote (Spain)", "title": "Sr. Solutions Engineer"},
+          {"name": "John Cazanis", "department": "Sales - AUS", "location": "Melbourne, AUS", "title": "Enterprise Account Executive"},
+          {"name": "Lindsey Laurune", "department": "Americas - Presales", "location": "Remote (NY)", "title": "Solutions Engineer"},
+          {"name": "Bhavin Patel", "department": "Americas - Presales", "location": "Remote (IL)", "title": "Principal Solutions Engineer"},
+          {"name": "Dylan Vetter", "department": "Americas - Presales", "location": "Remote (VA)", "title": "Solutions Engineer"},
+          {"name": "Roger Stanikoski", "department": "Americas - Presales", "location": "Remote (VT)", "title": "Sr. Solutions Engineer"},
+          {"name": "Jordan Millhausen", "department": "Americas - Presales", "location": "Remote (MD)", "title": "Solutions Engineer"},
+          {"name": "Corey Swerdloff", "department": "Americas - Presales", "location": "Remote (NC)", "title": "Sr. Solutions Engineer"},
+          {"name": "Brad Drysdale", "department": "Americas - Presales", "location": "Sydney, AUS", "title": "Principal Solutions Engineer"},
+          {"name": "Matt Sager", "department": "Americas - Presales", "location": "Remote (MA)", "title": "Principal Solutions Engineer"},
+          {"name": "Kyle Guiao", "department": "Customer Success", "location": "Remote (CA)", "title": "Customer Excellence Program Director"},
+          {"name": "Kamal Singarapu", "department": "Customer Success", "location": "Remote (Alberta CAN)", "title": "Customer Success Manager"},
+          {"name": "Jacques Groleau", "department": "Customer Success", "location": "Remote (SC)", "title": "Director, Customer Success North America"},
+          {"name": "Maria Hercules", "department": "Customer Success", "location": "London, UK", "title": "Director, Customer Success EMEA"},
+          {"name": "Mina Muttila", "department": "Customer Success", "location": "Remote (MA)", "title": "Sr. Customer Success Manager"},
+          {"name": "Olivier Cloarec", "department": "Customer Success", "location": "Remote (France)", "title": "Customer Success Manager"},
+          {"name": "Louis Risebro", "department": "Customer Success", "location": "London, UK", "title": "Customer Success Manager"},
+          {"name": "Andy Len", "department": "Customer Success", "location": "Remote (Australia)", "title": "Customer Success Manager"},
+          {"name": "Raisa Shabalin", "department": "Customer Success", "location": "Remote (CA)", "title": "Sr. Customer Success Manager"},
+          {"name": "Paul Mason", "department": "Customer Success", "location": "Remote (NC)", "title": "Sr. Customer Success Manager"},
+          {"name": "Markus Stenger", "department": "Customer Success", "location": "Remote (Germany)", "title": "Customer Success Manager"},
+          {"name": "Rudresh Pramanik", "department": "Customer Success", "location": "Gaian Solutions (India)", "title": "Customer Success Manager"},
+          {"name": "Duane van Heerden", "department": "Customer Success", "location": "Remote (CA)", "title": "Sr. Customer Success Manager"},
+          {"name": "Tommy Swartzbaugh", "department": "Customer Success", "location": "Remote (FL)", "title": "Customer Success Manager"},
+          {"name": "Rodrigo Moreira", "department": "Customer Success", "location": "London, UK", "title": "Sr. Customer Success Manager"},
+          {"name": "Suraj Krishnamoorthy", "department": "Customer Success", "location": "Gaian Solutions (India)", "title": "Customer Success Manager"},
+          {"name": "Tom Steg", "department": "Customer Success", "location": "Remote (MD)", "title": "Sr. Customer Success Manager"},
+          {"name": "Michael Saul", "department": "Customer Success", "location": "Remote (CA)", "title": "Sr. Customer Success Manager"},
+          {"name": "Sally Nunekpeku", "department": "Customer Success", "location": "London, UK", "title": "Customer Success Manager"},
+          {"name": "Akriti Singhal", "department": "Customer Success", "location": "Gaian Solutions (India)", "title": "Customer Success Manager"},
+          {"name": "Ganesh Mekala", "department": "Technical Support", "location": "San Mateo, CA", "title": "Sr. Director, Global Support"},
+          {"name": "Atul Pande", "department": "Technical Support", "location": "San Mateo, CA", "title": "Manager, Technical Support West II"},
+          {"name": "Rob Vazzana", "department": "Technical Support", "location": "Remote (MA)", "title": "Manager, Technical Support East II"},
+          {"name": "David Shen", "department": "Technical Support", "location": "San Mateo, CA", "title": "Sr. Product Specialist"},
+          {"name": "Saikiran Toteli", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support"},
+          {"name": "Jyothi Srinivas", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Sulab Thapa", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Support DevOps"},
+          {"name": "Sachin Ghawde", "department": "Technical Support", "location": "San Mateo, CA", "title": "Sr. Technical Support Engineer"},
+          {"name": "Paul Ammirata", "department": "Technical Support", "location": "Remote (MD)", "title": "Sr. Technical Support Engineer"},
+          {"name": "Abrar Ahmed", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Rupesh G", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Dharvi", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Eric Fertig", "department": "Technical Support", "location": "San Mateo, CA", "title": "Technical Support Engineer"},
+          {"name": "Sowmya Mittakanti", "department": "Technical Support", "location": "Remote (TX)", "title": "Technical Support Engineer"},
+          {"name": "Arpan Banerjee", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Naresh Gondu", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L1"},
+          {"name": "Rahul", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Frank Mayo", "department": "Technical Support", "location": "Remote (MA)", "title": "Sr. Technical Support Engineer"},
+          {"name": "Cesar Bolanos Vizcarra", "department": "Technical Support", "location": "Remote (MN)", "title": "Sr. Technical Support Engineer"},
+          {"name": "Satyanarayana Kada", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Bhima Kalidindi", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L1"},
+          {"name": "Rohit Chennupati", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L1"},
+          {"name": "Kellan Sells", "department": "Technical Support", "location": "Remote (AZ)", "title": "Technical Support Engineer"},
+          {"name": "Rashmi Kolluri", "department": "Technical Support", "location": "Remote (TX)", "title": "Sr. Technical Support Engineer"},
+          {"name": "Rithik", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Susmita", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Sarah Erum Baju", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L1"},
+          {"name": "Vinoth Sekar", "department": "Technical Support", "location": "London, UK", "title": "Sr. Technical Support Engineer EMEA"},
+          {"name": "Afsal", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Aditya Konthami", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Manikanta Pyla", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Prabhodini", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L1"},
+          {"name": "Sagar K", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Rama Linga Murthy", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Vidya", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Savan", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Mnikanthanjanapuram Reddy", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Platinum Plus"},
+          {"name": "Narendiran", "department": "Technical Support", "location": "Gaian Solutions (India)", "title": "Technical Support L3"},
+          {"name": "Greg Benson", "department": "Engineering", "location": "San Mateo, CA", "title": "Chief Scientist"},
+          {"name": "Ajay Kidave", "department": "Engineering", "location": "San Mateo, CA", "title": "Consultant"},
+          {"name": "Anju Schiller", "department": "Engineering", "location": "San Mateo, CA", "title": "VP, Engineering"},
+          {"name": "Luna Wang", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Shumin Zhang", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Jump Ananpiriyakul", "department": "Engineering", "location": "San Mateo, CA", "title": "Director, Software Engineering"},
+          {"name": "Peter Ngai", "department": "Engineering", "location": "San Mateo, CA", "title": "Principal Architect"},
+          {"name": "Tu Le", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Tim Fan", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Steven Zhang", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Yin Hu", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Guo Fan", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Arbie Hsu", "department": "Engineering", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Jigish Patel", "department": "Platform", "location": "Remote (NJ)", "title": "Director, Software Engineering"},
+          {"name": "Cole Howard", "department": "Platform", "location": "Remote (CA)", "title": "Sr. Manager, Software Engineering I"},
+          {"name": "Tim Ellis", "department": "Platform", "location": "Remote (MA)", "title": "Sr. Principal Engineer"},
+          {"name": "Terry Tran", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Dave Gan", "department": "Platform", "location": "San Mateo, CA", "title": "Staff Software Engineer"},
+          {"name": "Sharath Chandra Nagulpally", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Shubham Pareek", "department": "Platform", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Nilay Narlawar", "department": "Platform", "location": "San Mateo, CA", "title": "Staff Software Engineer"},
+          {"name": "Matt Andress", "department": "Platform", "location": "Remote (MO)", "title": "Sr. Software Engineer"},
+          {"name": "Deep Mistry", "department": "Platform", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Danielle Hu", "department": "Platform", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Keith Zeto", "department": "Platform", "location": "Remote (NY)", "title": "Staff Software Engineer"},
+          {"name": "Junhee Park", "department": "Platform", "location": "Remote (MI)", "title": "Sr. Software Engineer"},
+          {"name": "Alexey Subbotin", "department": "Platform", "location": "Remote (PA)", "title": "Sr. Principal Software Engineer"},
+          {"name": "Sushen Dubey", "department": "Platform", "location": "San Mateo, CA", "title": "Staff Software Engineer"},
+          {"name": "Bill Goff", "department": "Platform", "location": "Remote (PA)", "title": "Sr. Principal Software Engineer"},
+          {"name": "Sadhana Chevireddy", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Manager, Software Engineering I"},
+          {"name": "Guannan (Bobby) He", "department": "Platform", "location": "San Mateo, CA", "title": "Manager, Software Engineering I"},
+          {"name": "Steve Goodwin", "department": "Platform", "location": "San Mateo, CA", "title": "UI/UX Architect"},
+          {"name": "Yoelvis Oses", "department": "Platform", "location": "Remote (NC)", "title": "Sr. Principal Software Engineer"},
+          {"name": "Alexander Kraham", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Madhav Nair", "department": "Platform", "location": "San Mateo, CA", "title": "Software Engineering Intern"},
+          {"name": "Jason Cho", "department": "Platform", "location": "San Mateo, CA", "title": "Principal Software Engineer"},
+          {"name": "Alan Le", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Frontend Software Engineer"},
+          {"name": "Shenyi Lu", "department": "Platform", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Barbora Novakova", "department": "Platform", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Kyle Scheuerlein", "department": "Platform", "location": "San Mateo, CA", "title": "Staff Software Engineer"},
+          {"name": "Wenhan Rao", "department": "APIM", "location": "San Mateo, CA", "title": "UI/UX Architect"},
+          {"name": "Andrei Kalashnikov", "department": "APIM", "location": "Remote (NY)", "title": "Sr. Software Engineer Frontend"},
+          {"name": "Monica Bellare", "department": "APIM", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Aryan Choudhary", "department": "APIM", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Ameya Yerpude", "department": "APIM", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "James Ambat", "department": "APIM", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Sankar Manoharan", "department": "Snaps", "location": "San Mateo, CA", "title": "Director, Software Engineering"},
+          {"name": "Aviral Srivastava", "department": "Snaps", "location": "Remote (CA)", "title": "Software Engineering Intern"},
+          {"name": "Matthew Bowen", "department": "Snaps", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Rohith Madhavan", "department": "Snaps", "location": "San Mateo, CA", "title": "Sr. Staff Software Engineer"},
+          {"name": "Syed Mudassir Ahmed", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Manager, Dev"},
+          {"name": "Paul Sung", "department": "Snaps", "location": "San Mateo, CA", "title": "Principal Software Engineer"},
+          {"name": "Adarsh Srivastava", "department": "Snaps", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Muskaan", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Ravi Kothapally", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Sivadon Saosong", "department": "Snaps", "location": "San Mateo, CA", "title": "Staff Software Engineer"},
+          {"name": "Vaishnav Kshirsagar", "department": "Snaps", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Ravi Mergu", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Satish Vatada", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Aneesh Madhavan", "department": "Snaps", "location": "San Mateo, CA", "title": "Software Engineer"},
+          {"name": "Andrew Outzen", "department": "Snaps", "location": "Remote (KS)", "title": "Sr. Software Engineer"},
+          {"name": "Balram Bana", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Sushma Sapa", "department": "Snaps", "location": "Remote (IN)", "title": "Staff Software Engineer"},
+          {"name": "Praneeth Doguparthy", "department": "Snaps", "location": "Gaian Solutions (India)", "title": "Software Engineer, Dev"},
+          {"name": "Prathyusha Kanala", "department": "Data Products", "location": "San Mateo, CA", "title": "Manager, Software Engineering II"},
+          {"name": "Patrick Taylor", "department": "Data Products", "location": "Remote (CO)", "title": "Sr. Principal SW Engineer"},
+          {"name": "Steve Yeom", "department": "Data Products", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Ram Kumar Aravind", "department": "Data Products", "location": "Gaian Solutions (India)", "title": "Engineering - Dev"},
+          {"name": "Robert Dragomir", "department": "Data Products", "location": "San Mateo, CA", "title": "Sr. Software Engineer"},
+          {"name": "Vishal Soni", "department": "Augmented Data Management", "location": "San Mateo, CA", "title": "Director, Software Engineering"},
+          {"name": "Shardul Sardesai", "department": "Augmented Data Management", "location": "San Mateo, CA", "title": "Principal Software Engineer"},
+          {"name": "Artem Velykorodnyj", "department": "Augmented Data Management", "location": "CyberVision (Kiev)", "title": "Engineering - Dev"},
+          {"name": "Indrajeet Kane", "department": "Augmented Data Management", "location": "Remote (WA)", "title": "Software Engineer"},
+          {"name": "Vlad Storona", "department": "Augmented Data Management", "location": "CyberVision (Kiev)", "title": "Engineering - Dev"},
+          {"name": "Salim Abdul", "department": "Augmented Data Management", "location": "CyberVision (Kiev)", "title": "Engineering - Dev"},
+          {"name": "Thanawut (Jump) Ananpiriyakul", "department": "Thai Team", "location": "Thailand", "title": "Director, Software Engineering"},
+          {"name": "Tanapat (Bank) Ruengsatra", "department": "Thai Team", "location": "Thailand", "title": "Manager, Software Engineering II"},
+          {"name": "Nattakan (Toon) Pramananpawt", "department": "Thai Team", "location": "Thailand", "title": "Sr. Data Engineer"},
+          {"name": "Nonthanat (B) Theeratanaparkul", "department": "Thai Team", "location": "Thailand", "title": "Sr. Data Scientist"},
+          {"name": "Apinard (Best) Kunanopparat", "department": "Thai Team", "location": "Thailand", "title": "Sr. Customer Success Manager"},
+          {"name": "Lertsak (Kui) Ananpiriyakul", "department": "Thai Team", "location": "Thailand", "title": "General Manager"},
+          {"name": "Panida (Chompoo) Nimnual", "department": "Thai Team", "location": "Thailand", "title": "Staff Software Engineer"},
+          {"name": "Pornapat (Ploy) Sudjaipraparat", "department": "Thai Team", "location": "Thailand", "title": "Sr. Software Engineer"},
+          {"name": "Sornrasak (Kiang) Charoenkuivanich", "department": "Thai Team", "location": "Thailand", "title": "Jr. Data Scientist"},
+          {"name": "Chalermkiat (Bob) Sirachairat", "department": "Thai Team", "location": "Thailand", "title": "Jr. Development Manager"},
+          {"name": "Akira (Poon) Sitdhikariyawat", "department": "Thai Team", "location": "Thailand", "title": "Data Scientist"},
+          {"name": "Pawit (Roy) Aiemvaravutigul", "department": "Thai Team", "location": "Thailand", "title": "Software Engineer"},
+          {"name": "Chalathorn (Pu) Prasongtham", "department": "Thai Team", "location": "Thailand", "title": "Software Engineer"},
+          {"name": "Martin Becker", "department": "Engineering Services", "location": "Remote (MA)", "title": "Director, Engineering Program Management"},
+          {"name": "Namita Prabhu", "department": "Engineering Services", "location": "San Mateo, CA", "title": "Sr. Director, QA"},
+          {"name": "Alex Wong", "department": "Engineering Services", "location": "San Mateo, CA", "title": "Director, Infrastructure Eng & Operations"},
+          {"name": "Scott Monteith", "department": "Engineering Services", "location": "Remote (NV)", "title": "Director, IT & Security"},
+          {"name": "Ankur Parekh", "department": "Engineering Services", "location": "San Mateo, CA", "title": "Sr. Manager, Technical Documentation II"},
+          {"name": "Kwame Oduro", "department": "Engineering Services", "location": "Remote (IL)", "title": "Security Analyst"},
+          {"name": "Dean Miguel", "department": "Engineering Services", "location": "San Mateo, CA", "title": "Lead IT Support Specialist"},
+          {"name": "Marna Strauss", "department": "Engineering Services", "location": "London, UK", "title": "Global Lead Security Engineer"},
+          {"name": "Nate Septimo", "department": "Engineering Services", "location": "San Mateo, CA", "title": "Desktop Analyst"},
+          {"name": "Ranjit Regulla", "department": "Engineering Services", "location": "Gaian Solutions (India)", "title": "Okta SME"},
+          {"name": "Hari T", "department": "Engineering Services", "location": "Gaian Solutions (India)", "title": "Okta SME"},
+          {"name": "John Brinckwirth", "department": "Technical Documentation", "location": "San Mateo, CA", "title": "Lead Technical Writer"},
+          {"name": "Ruth Stento", "department": "Technical Documentation", "location": "Remote (FL)", "title": "Lead Technical Writer"},
+          {"name": "Kalpana Maladi", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Leena Gopal", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Rachana M", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Shilpa Chinnakonduru", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Amritesh", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Subhajit Sengupta", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Vedam Anand", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Gouri B", "department": "Technical Documentation", "location": "Gaian Solutions (India)", "title": "Tech Writer"},
+          {"name": "Anton Samsonov", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "Sr. Quality Engineer"},
+          {"name": "Ajeesh Varghese", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "QA Architect"},
+          {"name": "Sunil Kumar Darshanan", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA Manager"},
+          {"name": "Vamsi Kodali", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Alexander Shostak", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "Sr. SDET I"},
+          {"name": "Swati Sahoo", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "Lead QA Engineer"},
+          {"name": "Mehraj Dawlekar", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Engineering - QA"},
+          {"name": "Srikanth Varanasi", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Nagendra A. S. Babu", "department": "Quality Assurance", "location": "Remote (TX)", "title": "Lead QA Engineer"},
+          {"name": "Pushpa Hegde", "department": "Quality Assurance", "location": "Remote (WA)", "title": "Sr. QA Engineer"},
+          {"name": "Venkata Sudhir Pridhvi", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Anusha", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Satish Reddi", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Dinesh Nallathambi", "department": "Quality Assurance", "location": "Remote (UT)", "title": "Sr. SDET I"},
+          {"name": "Poornima Srikantesh", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "Sr. SDET II"},
+          {"name": "Pranay Kumar", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Venkata Shireen", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Tousif", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Yukta Chikate", "department": "Quality Assurance", "location": "San Mateo, CA", "title": "AI & Test Automation Intern"},
+          {"name": "Aysu Ahmadli", "department": "Quality Assurance", "location": "Remote (VA)", "title": "Lead QA Engineer"},
+          {"name": "Lalitha Sagar K", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Managed Services"},
+          {"name": "Kranthi Kumar", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Natasha M", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Nazer Shaikh", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Keerthi P", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Pavan", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap - QA"},
+          {"name": "Krishna Chaitanya", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Yugandhar Nagasai", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap - QA"},
+          {"name": "Vamsi V", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Snap QA"},
+          {"name": "Anumeha Singh", "department": "Quality Assurance", "location": "Gaian Solutions (India)", "title": "Automation QA"},
+          {"name": "Karthik Birdiga navile", "department": "Infrastructure Engineering and Operations", "location": "Remote (MA)", "title": "Manager, Infrastructure Engineering"},
+          {"name": "Zafar Iqbal", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Akshay Meda", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Jay Gowravarapu", "department": "Infrastructure Engineering and Operations", "location": "Remote (TX)", "title": "Principal Infrastructure Engineer"},
+          {"name": "Ravi Kamarthpu", "department": "Infrastructure Engineering and Operations", "location": "Remote (TX)", "title": "Sr. Infrastructure Engineer"},
+          {"name": "Venkat Vlutha", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Himanshu Sharma", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Kabir Gupta", "department": "Infrastructure Engineering and Operations", "location": "Remote (VA)", "title": "Sr. Infrastructure Engineer"},
+          {"name": "Baig Ahmed", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Purnachand Raja", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Sampath Raju", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"},
+          {"name": "Lakshmi Narsimhan", "department": "Infrastructure Engineering and Operations", "location": "Gaian Solutions (India)", "title": "DevOps"}
+        ];
+        
+        // PTO Data extracted from SnapLogic CSV file
+        const CSV_PTO_ENTRIES = [
+          {
+            id: 1001,
+            name: "Angelica Tacca Dughetti",
+            startDate: "2025-09-08",
+            endDate: "2025-09-12",
+            status: "Pending Approval",
+            requestType: "Vacation / Personal Time",
+            message: "Holiday"
+          },
+          {
+            id: 1002,
+            name: "Jocelyn Arcega",
+            startDate: "2025-08-18",
+            endDate: "2025-08-29",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: ""
+          },
+          {
+            id: 1003,
+            name: "Konstantin Riegel",
+            startDate: "2025-08-11",
+            endDate: "2025-08-29",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: ""
+          },
+          {
+            id: 1004,
+            name: "Markus Pentzek",
+            startDate: "2025-07-17",
+            endDate: "2025-07-27",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: ""
+          },
+          {
+            id: 1005,
+            name: "Markus Pentzek",
+            startDate: "2025-08-11",
+            endDate: "2025-08-17",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: ""
+          },
+          {
+            id: 1006,
+            name: "Nilesh Parmar",
+            startDate: "2025-08-21",
+            endDate: "2025-08-27",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: "Iceland"
+          },
+          {
+            id: 1007,
+            name: "Stan Okunevic",
+            startDate: "2025-07-21",
+            endDate: "2025-07-25",
+            status: "Approved",
+            requestType: "Vacation / Personal Time",
+            message: "Tokyo, Yoga Retreat, etc"
+          },
+          {
+            id: 1008,
+            name: "Toni Branco",
+            startDate: "2025-07-28",
+            endDate: "2025-08-15",
+            status: "Approved",
+            requestType: "Vacation (France only) - Congés payés",
+            message: ""
+          }
+        ];
+        
+        class PTODashboard {
+            constructor() {
+                this.ptoEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
+                this.activeRegionFilter = 'all';
+                this.activeFunctionFilter = 'all';
+                this.employees = [];
+                this.loadEmployeeData();
+            }
+            
+            loadEmployeeData() {
+                // Employee data embedded directly to avoid CORS issues
+                this.employees = this.enhanceEmployeeData(SNAPLOGIC_EMPLOYEES);
+                this.loadCSVData();
+                this.populateEmployeeDropdown();
+                this.updateFilterButtons();
+                this.initializeEventListeners();
+                this.initializeDatePicker();
+                this.renderCalendar();
+                this.renderPTOList();
+            }
+            
+            loadCSVData() {
+                // Load PTO data from CSV if localStorage is empty or we want to refresh
+                const existingEntries = JSON.parse(localStorage.getItem('ptoEntries') || '[]');
+                
+                // Only load CSV data if we don't have any existing entries or if we want to merge
+                const csvEntriesWithEmployeeData = CSV_PTO_ENTRIES.map(entry => {
+                    const employee = this.employees.find(emp => emp.name === entry.name);
+                    return {
+                        ...entry,
+                        department: employee ? employee.department : 'Unknown',
+                        location: employee ? employee.location : 'Unknown',
+                        title: employee ? employee.title : 'Unknown'
+                    };
+                });
+                
+                // Merge with existing entries, avoiding duplicates by checking name and dates
+                const mergedEntries = [...existingEntries];
+                csvEntriesWithEmployeeData.forEach(csvEntry => {
+                    const exists = existingEntries.some(existing => 
+                        existing.name === csvEntry.name && 
+                        existing.startDate === csvEntry.startDate &&
+                        existing.endDate === csvEntry.endDate
+                    );
+                    if (!exists) {
+                        mergedEntries.push(csvEntry);
+                    }
+                });
+                
+                this.ptoEntries = mergedEntries;
+                this.savePTOEntries();
+            }
+            
+            enhanceEmployeeData(employees) {
+                return employees.map(emp => {
+                    // Add region based on location
+                    let region = 'North America';
+                    if (emp.location.includes('London') || emp.location.includes('UK') || 
+                        emp.location.includes('France') || emp.location.includes('Germany') || 
+                        emp.location.includes('Spain') || emp.location.includes('Italy') || 
+                        emp.location.includes('Sweden') || emp.location.includes('Kiev')) {
+                        region = 'EMEA';
+                    } else if (emp.location.includes('India') || emp.location.includes('Thailand') || 
+                               emp.location.includes('AUS') || emp.location.includes('Australia')) {
+                        region = 'APAC';
+                    }
+                    
+                    // Add function based on department and title  
+                    let func = 'Operations';
+                    
+                    // Solutions Engineers - separate from Sales
+                    if (emp.title.includes('Solutions Engineer') || emp.title.includes('Solution Engineering') || 
+                        emp.title.includes('Presales') || emp.title.includes('Sales Engineering') ||
+                        emp.department.includes('Presales') || emp.department.includes('Americas - Presales')) {
+                        func = 'Sales Engineering';
+                    }
+                    // Sales Development Representatives - separate from Sales
+                    else if (emp.title.includes('Business Development Representative') || 
+                             emp.title.includes('Sales Development Representative') || 
+                             emp.title.includes('SDR') || emp.title.includes('BDR') || emp.title.includes('ADR')) {
+                        func = 'Sales Development';
+                    }
+                    // Sales Operations/Enablement - separate from pure Sales
+                    else if (emp.title.includes('Revenue Operations') || emp.title.includes('Sales Operations') || 
+                             emp.title.includes('Deal Desk') || emp.title.includes('Sales Programs') || 
+                             emp.title.includes('Enablement') || emp.title.includes('Sales Transformation')) {
+                        func = 'Sales Operations';
+                    }
+                    // Actual Sales roles
+                    else if (emp.department.includes('Sales') || emp.department.includes('Channel') || 
+                        emp.department.includes('Inside Sales') || emp.department.includes('Field Sales') ||
+                        emp.department.includes('Global Field Operations') || emp.title.includes('Account Executive') ||
+                        emp.title.includes('Sales Officer') || emp.title.includes('Sales Director') || 
+                        emp.title.includes('Sales Manager') || emp.title.includes('RVP') || 
+                        emp.title.includes('VP, OEM') || emp.title.includes('VP, Channels')) {
+                        func = 'Sales';
+                    } else if (emp.department.includes('Engineering') || emp.department.includes('Platform') || 
+                               emp.department.includes('APIM') || emp.department.includes('Snaps') || 
+                               emp.department.includes('Data Products') || emp.department.includes('Augmented') || 
+                               emp.department.includes('Quality Assurance') || emp.department.includes('Infrastructure') ||
+                               emp.department.includes('Thai Team') || emp.title.includes('Engineer') || 
+                               emp.title.includes('Developer') || emp.title.includes('QA') || emp.title.includes('DevOps')) {
+                        func = 'Engineering';
+                    } else if (emp.department.includes('Marketing') || emp.title.includes('Marketing')) {
+                        func = 'Marketing';
+                    } else if (emp.department.includes('Product') || emp.title.includes('Product') || 
+                               emp.title.includes('UX') || emp.title.includes('Design')) {
+                        func = 'Product';
+                    } else if (emp.department.includes('Customer Success') || emp.department.includes('Technical Support') ||
+                               emp.title.includes('Customer Success') || emp.title.includes('Support')) {
+                        func = 'Customer Success';
+                    } else if (emp.department.includes('Professional Services') || emp.title.includes('PS ') || 
+                               emp.title.includes('Solutions Architect') || emp.title.includes('Professional Services')) {
+                        func = 'Professional Services';
+                    } else if (emp.department.includes('People') || emp.title.includes('People')) {
+                        func = 'People';
+                    } else if (emp.department.includes('Executive Team') || emp.title.includes('Chief') || 
+                               emp.title.includes('CEO') || emp.title.includes('President')) {
+                        func = 'Executive';
+                    }
+                    
+                    return {
+                        ...emp,
+                        region: region,
+                        function: func
+                    };
+                });
+            }
+            
+            initializeEventListeners() {
+                document.getElementById('ptoForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addPTOEntry();
+                });
+            }
+            
+            populateEmployeeDropdown() {
+                const select = document.getElementById('employeeSelect');
+                const filteredEmployees = this.getFilteredEmployees();
+                const sortedEmployees = filteredEmployees.sort((a, b) => a.name.localeCompare(b.name));
+                
+                select.innerHTML = '<option value="">Select employee...</option>';
+                sortedEmployees.forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(employee);
+                    option.textContent = `${employee.name} (${employee.region} | ${employee.function})`;
+                    select.appendChild(option);
+                });
+            }
+            
+            getFilteredEmployees() {
+                return this.employees.filter(employee => {
+                    // Apply region filter
+                    if (this.activeRegionFilter !== 'all' && employee.region !== this.activeRegionFilter) {
+                        return false;
+                    }
+                    
+                    // Apply function filter
+                    if (this.activeFunctionFilter !== 'all' && employee.function !== this.activeFunctionFilter) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            updateFilterButtons() {
+                // Region filters
+                const regions = [...new Set(this.employees.map(emp => emp.region))].sort();
+                const regionContainer = document.getElementById('regionFilters');
+                regionContainer.innerHTML = '<button class="filter-btn active" data-region="all">All Regions</button>';
+                regions.forEach(region => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.dataset.region = region;
+                    btn.textContent = region;
+                    regionContainer.appendChild(btn);
+                });
+                
+                // Function filters
+                const functions = [...new Set(this.employees.map(emp => emp.function))].sort();
+                const functionContainer = document.getElementById('functionFilters');
+                functionContainer.innerHTML = '<button class="filter-btn active" data-function="all">All Functions</button>';
+                functions.forEach(func => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.dataset.function = func;
+                    btn.textContent = func;
+                    functionContainer.appendChild(btn);
+                });
+                
+                // Add event listeners
+                document.querySelectorAll('[data-region]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.setRegionFilter(e.target.dataset.region);
+                    });
+                });
+                
+                document.querySelectorAll('[data-function]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.setFunctionFilter(e.target.dataset.function);
+                    });
+                });
+            }
+            
+            initializeDatePicker() {
+                this.datePicker = flatpickr("#ptoDateRange", {
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    showMonths: 2,
+                    conjunction: " to "
+                });
+            }
+            
+            generateColorForEmployee(name) {
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                
+                const hue = Math.abs(hash % 360);
+                const saturation = 65 + (Math.abs(hash) % 20);
+                const lightness = 45 + (Math.abs(hash) % 15);
+                
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            }
+            
+            addPTOEntry() {
+                const employeeSelect = document.getElementById('employeeSelect');
+                const selectedDates = this.datePicker.selectedDates;
+                
+                if (!employeeSelect.value || selectedDates.length === 0) {
+                    alert('Please select an employee and date range');
+                    return;
+                }
+                
+                const employee = JSON.parse(employeeSelect.value);
+                
+                let startDate, endDate;
+                if (selectedDates.length === 1) {
+                    startDate = endDate = selectedDates[0].toISOString().split('T')[0];
+                } else {
+                    startDate = selectedDates[0].toISOString().split('T')[0];
+                    endDate = selectedDates[1].toISOString().split('T')[0];
+                }
+                
+                const entry = {
+                    id: Date.now(),
+                    name: employee.name,
+                    department: employee.department,
+                    location: employee.location,
+                    title: employee.title,
+                    startDate: startDate,
+                    endDate: endDate
+                };
+                
+                this.ptoEntries.push(entry);
+                this.savePTOEntries();
+                this.renderCalendar();
+                this.renderPTOList();
+                
+                document.getElementById('ptoForm').reset();
+                this.datePicker.clear();
+            }
+            
+            deletePTOEntry(id) {
+                this.ptoEntries = this.ptoEntries.filter(entry => entry.id !== id);
+                this.savePTOEntries();
+                this.renderCalendar();
+                this.renderPTOList();
+            }
+            
+            savePTOEntries() {
+                localStorage.setItem('ptoEntries', JSON.stringify(this.ptoEntries));
+            }
+            
+            setRegionFilter(region) {
+                this.activeRegionFilter = region;
+                
+                document.querySelectorAll('[data-region]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-region="${region}"]`).classList.add('active');
+                
+                this.populateEmployeeDropdown();
+                this.renderCalendar();
+                this.renderPTOList();
+            }
+            
+            setFunctionFilter(func) {
+                this.activeFunctionFilter = func;
+                
+                document.querySelectorAll('[data-function]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-function="${func}"]`).classList.add('active');
+                
+                this.populateEmployeeDropdown();
+                this.renderCalendar();
+                this.renderPTOList();
+            }
+            
+            getFilteredEntries() {
+                return this.ptoEntries.filter(entry => {
+                    // Get employee data for this entry
+                    const employee = this.employees.find(emp => emp.name === entry.name);
+                    if (!employee) return true; // Show entries without employee data
+                    
+                    // Apply region filter
+                    if (this.activeRegionFilter !== 'all' && employee.region !== this.activeRegionFilter) {
+                        return false;
+                    }
+                    
+                    // Apply function filter
+                    if (this.activeFunctionFilter !== 'all' && employee.function !== this.activeFunctionFilter) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            renderPTOList() {
+                const container = document.getElementById('ptoEntries');
+                const filteredEntries = this.getFilteredEntries();
+                
+                if (filteredEntries.length === 0) {
+                    let message = 'No PTO entries yet. Add some above!';
+                    if (this.activeRegionFilter !== 'all' || this.activeFunctionFilter !== 'all') {
+                        const filters = [];
+                        if (this.activeRegionFilter !== 'all') filters.push(this.activeRegionFilter);
+                        if (this.activeFunctionFilter !== 'all') filters.push(this.activeFunctionFilter);
+                        message = `No PTO entries for ${filters.join(' + ')}.`;
+                    }
+                    container.innerHTML = `<p>${message}</p>`;
+                    return;
+                }
+                
+                const sortedEntries = filteredEntries.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                
+                container.innerHTML = sortedEntries.map(entry => {
+                    const start = new Date(entry.startDate).toLocaleDateString();
+                    const end = new Date(entry.endDate).toLocaleDateString();
+                    const dateRange = start === end ? start : `${start} - ${end}`;
+                    
+                    // Get enhanced employee data
+                    const employee = this.employees.find(emp => emp.name === entry.name);
+                    const region = employee ? employee.region : 'Unknown';
+                    const func = employee ? employee.function : 'Unknown';
+                    const location = entry.location ? ` - ${entry.location}` : '';
+                    
+                    const status = entry.status ? ` [${entry.status}]` : '';
+                    const message = entry.message ? ` - ${entry.message}` : '';
+                    
+                    return `
+                        <div class="employee-item" style="border-left-color: ${this.generateColorForEmployee(entry.name)}">
+                            <strong>${entry.name}</strong> (${region} | ${func}${location}) - ${dateRange}${status}${message}
+                            <button class="delete-btn" onclick="dashboard.deletePTOEntry(${entry.id})">Delete</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            renderCalendar() {
+                const container = document.getElementById('calendarContainer');
+                const startDate = new Date(2025, 6, 1); // July 1, 2025
+                const months = ['July', 'August', 'September'];
+                
+                let html = '';
+                
+                for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+                    const currentMonth = new Date(2025, 6 + monthOffset, 1);
+                    html += this.renderMonth(currentMonth, months[monthOffset]);
+                }
+                
+                container.innerHTML = html;
+            }
+            
+            renderMonth(monthDate, monthName) {
+                const year = monthDate.getFullYear();
+                const month = monthDate.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                let html = `
+                    <div class="month-header">${monthName} ${year}</div>
+                    <div class="calendar-grid">
+                `;
+                
+                dayNames.forEach(day => {
+                    html += `<div class="calendar-header">${day}</div>`;
+                });
+                
+                const currentDate = new Date(startDate);
+                for (let week = 0; week < 6; week++) {
+                    for (let day = 0; day < 7; day++) {
+                        const isCurrentMonth = currentDate.getMonth() === month;
+                        const dateStr = currentDate.toISOString().split('T')[0];
+                        const ptoForDate = this.getFilteredEntries().filter(entry => {
+                            const entryStart = new Date(entry.startDate);
+                            const entryEnd = new Date(entry.endDate);
+                            const currentDateObj = new Date(dateStr);
+                            return currentDateObj >= entryStart && currentDateObj <= entryEnd;
+                        });
+                        
+                        html += `
+                            <div class="calendar-day ${isCurrentMonth ? '' : 'other-month'}">
+                                <div>${currentDate.getDate()}</div>
+                                ${ptoForDate.map(entry => `<span class="pto-entry" style="background-color: ${this.generateColorForEmployee(entry.name)}">${entry.name}</span>`).join('')}
+                            </div>
+                        `;
+                        
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    
+                    if (currentDate.getMonth() !== month) break;
+                }
+                
+                html += '</div>';
+                return html;
+            }
+        }
+        
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        const dashboard = new PTODashboard();
+    </script>
+</body>
+</html>
