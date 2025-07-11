@@ -95,5 +95,14 @@ const CSV_PTO_ENTRIES = [
     "department": "Sales - EMEA",
     "location": "Remote (France)",
     "title": "Principal Solutions Engineer"
+  },
+  {
+    "id": 1752229143072,
+    "name": "Manon Bayard",
+    "department": "Sales - EMEA",
+    "location": "Remote (France)",
+    "title": "Principal Solutions Engineer",
+    "startDate": "2025-08-13",
+    "endDate": "2025-08-14"
   }
 ];
