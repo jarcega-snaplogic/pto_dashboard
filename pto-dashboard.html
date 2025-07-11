@@ -1648,9 +1648,9 @@
                 const firstDay = new Date(year, month, 1);
                 const lastDay = new Date(year, month + 1, 0);
                 const startDate = new Date(firstDay);
-                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                startDate.setDate(startDate.getDate() - (firstDay.getDay() + 6) % 7);
                 
-                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                 
                 let html = `
                     <div class="month-header">${monthName} ${year}</div>
