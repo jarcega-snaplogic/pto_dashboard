@@ -26,6 +26,8 @@
             --calendar-other-month: #f8f9fa;
             --pto-entry-bg: #ff6b6b;
             --month-header-bg: #e9ecef;
+            --delete-btn-bg: #dc3545;
+            --delete-btn-hover: #c82333;
         }
 
         /* Dark theme variables - for the night owls and people with taste */
@@ -46,8 +48,10 @@
             --calendar-header-text: #e0e0e0;
             --calendar-day-bg: #2d2d2d;
             --calendar-other-month: #3a3a3a;
-            --pto-entry-bg: #e74c3c;
+            --pto-entry-bg: #c0392b;
             --month-header-bg: #404040;
+            --delete-btn-bg: #dc3545;
+            --delete-btn-hover: #c82333;
         }
 
         /* Theme toggle button styling */
@@ -108,6 +112,10 @@
             color: var(--text-color);
             text-align: center;
             margin-bottom: 30px;
+        }
+        
+        h3 {
+            color: var(--text-color);
         }
         
         .form-section {
@@ -302,7 +310,7 @@
             border: none;
             font-size: 20px;
             cursor: pointer;
-            color: #666;
+            color: var(--text-secondary);
             padding: 5px;
             border-radius: 50%;
             width: 30px;
@@ -314,8 +322,8 @@
         }
         
         .drawer-close-btn:hover {
-            background: #e9ecef;
-            color: #333;
+            background: var(--form-bg);
+            color: var(--text-color);
         }
         
         .drawer-content {
@@ -337,15 +345,15 @@
         }
         
         .employee-item {
-            background: #f8f9fa;
+            background: var(--form-bg);
             padding: 10px;
             margin: 5px 0;
             border-radius: 4px;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid var(--button-primary);
         }
         
         .delete-btn {
-            background-color: #dc3545;
+            background-color: var(--delete-btn-bg);
             color: white;
             border: none;
             padding: 5px 10px;
@@ -356,13 +364,13 @@
         }
         
         .delete-btn:hover {
-            background-color: #c82333;
+            background-color: var(--delete-btn-hover);
         }
         
         .filter-section {
             margin: 20px 0;
             padding: 15px;
-            background: #f8f9fa;
+            background: var(--form-bg);
             border-radius: 6px;
         }
         
@@ -375,9 +383,9 @@
         
         .filter-btn {
             padding: 8px 16px;
-            border: 1px solid #dee2e6;
-            background: white;
-            color: #333;
+            border: 1px solid var(--border-color);
+            background: var(--container-bg);
+            color: var(--text-color);
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
@@ -385,13 +393,13 @@
         }
         
         .filter-btn:hover {
-            background: #e9ecef;
+            background: var(--form-bg);
         }
         
         .filter-btn.active {
-            background: #007bff;
+            background: var(--button-primary);
             color: white;
-            border-color: #007bff;
+            border-color: var(--button-primary);
         }
     </style>
 </head>
