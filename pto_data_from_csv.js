@@ -95,5 +95,14 @@ const CSV_PTO_ENTRIES = [
     "department": "Sales - EMEA",
     "location": "Remote (France)",
     "title": "Principal Solutions Engineer"
+  },
+  {
+    "id": 1752242422647,
+    "name": "Toni Branco",
+    "department": "Sales - EMEA",
+    "location": "Remote (France)",
+    "title": "Principal Solutions Engineer",
+    "startDate": "2025-07-14",
+    "endDate": "2025-07-14"
   }
 ];
