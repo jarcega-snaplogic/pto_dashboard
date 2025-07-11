@@ -95,5 +95,14 @@ const CSV_PTO_ENTRIES = [
     "department": "Sales - EMEA",
     "location": "Remote (France)",
     "title": "Principal Solutions Engineer"
+  },
+  {
+    "id": 1752233772884,
+    "name": "Louis Risebro",
+    "department": "Customer Success",
+    "location": "London, UK",
+    "title": "Customer Success Manager",
+    "startDate": "2025-07-17",
+    "endDate": "2025-07-18"
   }
 ];
