@@ -1665,12 +1665,13 @@
                 for (let week = 0; week < 6; week++) {
                     for (let day = 0; day < 7; day++) {
                         const isCurrentMonth = currentDate.getMonth() === month;
-                        const dateStr = currentDate.toISOString().split('T')[0];
+                        // Format date as YYYY-MM-DD to match PTO entry format
+                        const dateStr = currentDate.getFullYear() + '-' + 
+                                      String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                      String(currentDate.getDate()).padStart(2, '0');
                         const ptoForDate = this.getFilteredEntries().filter(entry => {
-                            const entryStart = new Date(entry.startDate);
-                            const entryEnd = new Date(entry.endDate);
-                            const currentDateObj = new Date(dateStr);
-                            return currentDateObj >= entryStart && currentDateObj <= entryEnd;
+                            // Compare date strings directly to avoid timezone issues
+                            return dateStr >= entry.startDate && dateStr <= entry.endDate;
                         });
                         
                         html += `
