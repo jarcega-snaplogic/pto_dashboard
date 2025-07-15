@@ -104,5 +104,14 @@ const CSV_PTO_ENTRIES = [
     "title": "Principal Solutions Engineer",
     "startDate": "2025-07-14",
     "endDate": "2025-07-14"
+  },
+  {
+    "id": 1752582157784,
+    "name": "Angelica Tacca Dughetti",
+    "department": "Sales - EMEA",
+    "location": "Remote (Spain)",
+    "title": "Sr. Solutions Engineer",
+    "startDate": "2025-09-14",
+    "endDate": "2025-09-14"
   }
 ];
